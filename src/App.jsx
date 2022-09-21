@@ -43,7 +43,18 @@ console.log(epochToJsDate(playerData.revisionDate))
 
       <h5>League Player Searcher</h5>
 
-      <input type="text" onChange={event => setSearchText(event.target.value)} />
+      <input type="text"
+      onKeyPress={(event) => {
+        if (event.key === "Enter") {
+          
+          setSearchText(event.target.value);
+          searchForPlayer(event);
+        }
+        else {
+          return
+        }
+      }}
+      onChange={event => setSearchText(event.target.value) }  />
 
       <button onClick={event => searchForPlayer(event)}>Search for Player</button>
 
