@@ -6,9 +6,10 @@ function App() {
 
   const [searchText, setSearchText] = useState('');
   const [playerData, setPlayerData] = useState({});
+  const [gameList, setGameList] = useState([]);
   
   
-  const API_KEY = 'RGAPI-0cc3efff-d0fa-4073-b474-5a59183fc8bf';
+  const API_KEY = 'RGAPI-09cd130b-3fae-4738-9b9a-30cdea1c54c4';
 
   function searchForPlayer(event) {
 
@@ -22,24 +23,38 @@ function App() {
 
     }).catch(function (error) {
       console.log(error)
-      alert('Summoner name not found')
+      alert(error)
     })
 
   }
-console.log(playerData)
+
+  function getPlayerGames(event) {
+
+    //handle api call til proxy server
+    axios.get('http://localhost:4000/past5games', {params: { username: searchText }} )
+      .then(function (response) {
+        setGameList(response.data)
+      }).catch(function (error) {
+      console.log(error)
+      alert('error')
+    })
+
+  }
+
+// console.log(playerData)
+console.log(gameList)
 
 function epochToJsDate(rd){
   // rd = revision date - epoch time
   // returns date obj
   
-  return new Date(rd*1000);
+  return new Date(rd);
 }
-
-console.log(epochToJsDate(playerData.revisionDate))
 
   return (
     <div className="App">
      <div className='container'>
+
 
       <h5>League Player Searcher</h5>
 
@@ -49,6 +64,7 @@ console.log(epochToJsDate(playerData.revisionDate))
           
           setSearchText(event.target.value);
           searchForPlayer(event);
+          getPlayerGames()
         }
         else {
           return
@@ -66,10 +82,37 @@ console.log(epochToJsDate(playerData.revisionDate))
       <img width='100' height='100' src={'http://ddragon.leagueoflegends.com/cdn/12.17.1/img/profileicon/' + playerData.profileIconId +'.png'} alt="summoner " />
       <p> Level : { playerData.summonerLevel }</p>
       <p>{ ' Sidste levelup : ' + epochToJsDate(playerData.revisionDate)}  </p>
+      
+     
       </>
       :
       <><p>No Data :sadge:</p></>
   }
+
+  { gameList.length !== 0 ?
+    <>
+      <p>yes! data</p>
+      {
+        gameList.map((gameData, index) =>
+          <>
+            <h2>Game {index + 1} </h2>
+            <div>
+              { gameData.info.participants.map((data, participantIndex) =>
+                <p>PLAYER { participantIndex + 1 } : { data.summonerName }, KDA: {data.kills} / {data.deaths} / {data.assists} </p>
+              ) }
+            </div>
+
+          </>
+        )
+      }
+    </>
+    :
+    <>
+    <p>no! :C no data</p>
+    </>
+  }
+
+
 
     </div>
   );
