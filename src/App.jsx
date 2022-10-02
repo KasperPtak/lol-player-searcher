@@ -7,10 +7,11 @@ function App() {
 	const [searchText, setSearchText] = useState("");
 	const [playerData, setPlayerData] = useState({});
 	const [gameList, setGameList] = useState([]);
+	const [masteryList, setMasteryList] = useState([]);
 	
 	const [liveGame, setLiveGame] = useState([]);
 
-	const API_KEY = "RGAPI-3b8dd079-1867-4f46-9c2e-bc83d25db672";
+	const API_KEY = "RGAPI-a1586c0f-28d4-4fab-81c1-f4b733551e9f";
 
 	function searchForPlayer(event) {
 		// Set up correct api call
@@ -46,6 +47,22 @@ function App() {
 				alert("error");
 			});
 	}
+	function getPlayerMastery(event) {
+		//handle api call til proxy server
+		axios
+			.get("http://localhost:4000/playerInfo", {
+				params: { username: searchText },
+			})
+			.then(function(response) {
+				setMasteryList(response.data);
+				
+			})
+			.catch(function(error) {
+				console.log(error);
+				alert("error");
+			});
+	}
+
 	function getPlayerLiveGame(event) {
 		//handle api call til proxy server
 		
@@ -65,7 +82,8 @@ function App() {
 
 	// console.log(playerData)
 	// console.log(gameList);
-	console.log(liveGame);
+	// console.log( "livegame array: " + liveGame);
+	console.log( "mastery array: ", masteryList);
 
 	function epochToJsDate(rd) {
 		// rd = revision date - epoch time
@@ -73,6 +91,33 @@ function App() {
 
 		return new Date(rd);
 	}
+
+
+	// Den her funktion var et forsøg på at oversætte champion id til chmpion name, virker i console men ikke i funktion
+		var request = require('request');
+
+var dDragonVersion = "12.6.1"
+
+function getChampName(id) {
+  request('http://ddragon.leagueoflegends.com/cdn/' + dDragonVersion + '/data/de_DE/champion.json', function (error, response, body) {
+
+    let list = JSON.parse(body);
+    let championList = list.data;
+
+    for (var i in championList) {
+
+      if (championList[i].key == id) {
+		  console.log(championList[i].id)
+		//   return championList[i].id;
+		
+      }
+
+    //   console.log(championList[i].id + " | " + championList[i].key);
+    }
+
+  });
+}
+	
 
 	return (
 		<div className="App">
@@ -86,6 +131,8 @@ function App() {
 							setSearchText(event.target.value);
 							searchForPlayer(event);
 							getPlayerGames();
+							getPlayerMastery();
+							// test();
 							
 						} else {
 							return;
@@ -97,11 +144,10 @@ function App() {
 				<button onClick={(event) => searchForPlayer(event)}>
 					Search for Player
 				</button>
+				<br />
 				<button onClick={(event) => getPlayerLiveGame(event)}>
-					Search for Players Live game
-				</button>
-				
-					
+					Search for Players Live game <br /> (Dont work if not ingame or weird characters in name) <br /> (Only works for lol games, needs error handling)
+				</button>					
 					<div>
 					{liveGame.length !== 0 ? (
 				<>
@@ -145,25 +191,63 @@ function App() {
 							epochToJsDate(playerData.revisionDate)}{" "}
 					</p>
 
-						
-
-					
-
 				</>
 			) : (
 				<>
 					<p>No Data :sadge: - please enter valid summonerName</p>
 				</>
 
-				
+			)}
+
+{masteryList.length !== 0 ? (
+				<>
+					<p>yes! - mastery data:</p>
+					<div>
+						{masteryList.map((data ,index) => (
+							<>
+							{/* konsollen skriver champion navne ud, indtil andet fix er fundet */}
+							{getChampName(data.championId)} 
+								<div>
+									<h2> Champion {index +1}  </h2>
+									<p> Mastery level: { data.championLevel } </p>
+									<img
+										width="100"
+										height="100"
+										src={
+											'https://ddragon.leagueoflegends.com/cdn/12.4.1/img/champion/' + 'Aatrox' + '.png'
+										}
+										
+										alt="Champion " 
+									/>
+									<p>
+										{ data.chestGranted == true ? (
+											<>
+											You've already gotten the monthly chest from getting an S or S+ with this champion
+											</>
+										)
+										:
+										(
+											<>
+											Get an S or an S+ to earn a monthly chest with this champion
+											</>
+										)}
+									</p>
+									
+								</div>
+							</>
+						))}
+					</div>
+				</>
+			) : (
+				<>
+					<p>No Data on mastery </p>
+				</>
 
 			)}
 
-			
-
 			{gameList.length !== 0 ? (
 				<>
-					<p>yes! data - gamelist</p>
+					<p>yes! data - Match history</p>
 					<div className="container">
 						{gameList.map((gameData, index) => (
 							<>
@@ -189,7 +273,7 @@ function App() {
 				</>
 			) : (
 				<>
-					<p>no! :C no gamelist data</p>
+					<p>no! :C no Match History data</p>
 				</>
 			)}
 		</div>
